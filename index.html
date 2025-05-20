@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Employee Income Tax App</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+    body {
+      font-family: 'Inter', system-ui, -apple-system, Arial, sans-serif;
+      background: linear-gradient(135deg, #bfdbfe, #e9d5ff);
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex; /* For centering */
+      justify-content: center; /* For centering */
+      align-items: center; /* For centering */
+    }
+    .container {
+      max-width: 1000px;
+      width: 100%; /* Ensure it takes available width up to max-width */
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #1e3a8a;
+      font-size: 2.4em;
+      margin-bottom: 30px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      font-weight: 700;
+    }
+    .form-grid { /* Renamed from form-group for clarity */
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Adjusted minmax for better spacing */
+      gap: 20px; /* Increased gap */
+      margin-bottom: 30px;
+    }
+    .input-group { /* Wrapper for label and input */
+        display: flex;
+        flex-direction: column;
+    }
+    .input-group label {
+      margin-bottom: 8px; /* Space between label and input */
+      font-size: 16px;
+      color: #374151;
+      font-weight: 600;
+    }
+    .input-group input {
+      padding: 12px;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      font-size: 16px;
+      transition: border 0.3s, box-shadow 0.3s, transform 0.2s;
+      width: 100%; /* Make input take full width of its grid cell */
+      box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    }
+    .input-group input:focus {
+      outline: none;
+      border: 2px solid transparent;
+      border-image: linear-gradient(to right, #1e40af, #7c3aed) 1;
+      box-shadow: 0 0 12px rgba(30, 64, 175, 0.4);
+      transform: scale(1.03);
+    }
+    h2 {
+      font-size: 1.6em;
+      color: #1f2937;
+      margin: 30px 0 15px;
+      border-bottom: 4px solid #1e40af;
+      padding-bottom: 10px;
+      font-weight: 600;
+    }
+    .month-row {
+      display: grid;
+      grid-template-columns: 120px 1fr 1fr; /* Adjusted label width */
+      gap: 15px;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 10px;
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      transition: background 0.3s, transform 0.2s;
+    }
+    .month-row:hover {
+      background: #e0f2fe;
+      transform: translateY(-3px);
+    }
+    .month-row label {
+      font-size: 15px;
+      color: #374151;
+      font-weight: 600;
+      text-align: right; /* Align month label to the right */
+      padding-right: 10px; /* Add some padding to the right of the label */
+    }
+    .month-row input {
+      padding: 10px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 15px;
+      width: 100%;
+      box-sizing: border-box;
+      transition: border 0.3s, box-shadow 0.3s;
+    }
+    .month-row input:focus {
+      outline: none;
+      border: 2px solid transparent;
+      border-image: linear-gradient(to right, #1e40af, #7c3aed) 1;
+      box-shadow: 0 0 10px rgba(30, 64, 175, 0.4);
+    }
+    .button-group {
+      display: flex;
+      gap: 15px;
+      margin-top: 25px;
+    }
+    button {
+      flex: 1;
+      padding: 16px;
+      background: linear-gradient(90deg, #1e40af, #7c3aed);
+      color: #ffffff;
+      border: none;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s, box-shadow 0.3s;
+      box-shadow: 0 6px 20px rgba(30, 64, 175, 0.3);
+    }
+    button:hover {
+      background: linear-gradient(90deg, #1e3a8a, #6d28d9);
+      transform: translateY(-4px);
+      box-shadow: 0 8px 25px rgba(30, 64, 175, 0.4);
+    }
+    button:active {
+      transform: scale(0.98);
+    }
+    footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 14px;
+      color: #4b5563;
+      font-weight: 500;
+    }
+    /* Custom Message Box */
+    .message-box-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .message-box-overlay.visible {
+        opacity: 1;
+        visibility: visible;
+    }
+    .message-box-content {
+        background-color: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        text-align: center;
+        max-width: 400px;
+        width: 90%;
+    }
+    .message-box-content p {
+        margin-bottom: 20px;
+        font-size: 16px;
+        color: #333;
+    }
+    .message-box-content button {
+        padding: 10px 20px;
+        font-size: 16px;
+        min-width: 100px;
+    }
+
+    @media (max-width: 768px) { /* Adjusted breakpoint */
+        .form-grid {
+            grid-template-columns: 1fr; /* Single column for smaller screens */
+        }
+        .month-row {
+            grid-template-columns: 100px 1fr 1fr; /* Adjust for smaller screens */
+        }
+         h1 {
+            font-size: 2em;
+        }
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 15px;
+      }
+      .container {
+        padding: 20px;
+        border-radius: 15px;
+      }
+      h1 {
+        font-size: 1.6em; /* Further reduced for very small screens */
+        letter-spacing: 1px;
+      }
+      .input-group label {
+        font-size: 15px;
+      }
+      .input-group input {
+        font-size: 15px;
+        padding: 10px;
+      }
+      .month-row {
+        grid-template-columns: 1fr; /* Stack elements */
+        grid-template-areas: 
+          "label"
+          "salary"
+          "tax";
+        gap: 8px; /* Reduced gap */
+        padding: 12px;
+      }
+      .month-row label {
+        grid-area: label;
+        text-align: left; /* Align left on mobile */
+        padding-right: 0;
+        font-size: 14px;
+        margin-bottom: 5px;
+      }
+      .month-row input:nth-of-type(1) { /* Gross Salary input */
+        grid-area: salary;
+      }
+      .month-row input:nth-of-type(2) { /* Income Tax input */
+        grid-area: tax;
+      }
+      .month-row input {
+        font-size: 14px;
+        padding: 10px;
+      }
+      h2 {
+        font-size: 1.3em;
+        margin: 25px 0 12px;
+      }
+      .button-group {
+        flex-direction: column;
+        gap: 10px;
+      }
+      button {
+        font-size: 16px;
+        padding: 14px;
+        border-radius: 10px;
+      }
+      footer {
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Income Tax Statement 2024-25</h1>
+    <div class="form-grid">
+      <div class="input-group">
+        <label for="employeeName">Name:</label>
+        <input type="text" id="employeeName" placeholder="Employee Name" required>
+      </div>
+      <div class="input-group">
+        <label for="cnic">CNIC:</label>
+        <input type="text" id="cnic" placeholder="e.g., 33100-1234567-1" required>
+      </div>
+      <div class="input-group">
+        <label for="designation">Designation:</label>
+        <input type="text" id="designation" placeholder="Designation" required>
+      </div>
+      <div class="input-group">
+        <label for="bsNo">BPS No.:</label>
+        <input type="number" id="bsNo" placeholder="BPS No. (1-22)" min="1" max="22" required>
+      </div>
+      <div class="input-group">
+        <label for="branchName">Branch Name:</label>
+        <input type="text" id="branchName" placeholder="Branch Name" value="I&S Branch" required>
+      </div>
+      <div class="input-group">
+        <label for="medicalAllowance">Medical Allowance (Monthly):</label>
+        <input type="number" id="medicalAllowance" placeholder="Medical Allowance" value="1500" min="1" required>
+      </div>
+    </div>
+
+    <h2>Salary and Income Tax</h2>
+    <div id="monthInputs">
+      <div class="month-row">
+        <label>Jul-24</label>
+        <input type="number" id="grossJul24" placeholder="Gross Salary" min="1" required>
+        <input type="number" id="taxJul24" placeholder="Income Tax" min="0" required>
+      </div>
+      <div class="month-row">
+        <label>Aug-24</label>
+        <input type="number" id="grossAug24" placeholder="Gross Salary" min="1" required>
+        <input type="number" id="taxAug24" placeholder="Income Tax" min="0" required>
+      </div>
+      <div class="month-row">
+        <label>Sep-24</label>
+        <input type="number" id="grossSep24" placeholder="Gross Salary" min="1" required>
+        <input type="number" id="taxSep24" placeholder="Income Tax" min="0" required>
+      </div>
+      <div class="month-row">
+        <label>Oct-24</label>
+        <input type="number" id="grossOct24" placeholder="Gross Salary" min="1" required>
+        <input type="number" id="taxOct24" placeholder="Income Tax" min="0" required>
+      </div>
+      <div class="month-row">
+        <label>Nov-24</label>
+        <input type="number" id="grossNov24" placeholder="Gross Salary" min="1" required>
+        <input type="number" id="taxNov24" placeholder="Income Tax" min="0" required>
+      </div>
+      <div class="month-row">
+        <label>Dec-24</label>
+        <input type="number" id="grossDec24" placeholder="Gross Salary (Auto)" min="1" required>
+        <input type="number" id="taxDec24" placeholder="Income Tax" min="0" required>
+      </div>
+      <div class="month-row">
+        <label>Jan-25</label>
+        <input type="number" id="grossJan25" placeholder="Gross Salary" min="1" required>
+        <input type="number" id="taxJan25" placeholder="Income Tax" min="0" required>
+      </div>
+      <div class="month-row">
+        <label>Feb-25</label>
+        <input type="number" id="grossFeb25" placeholder="Gross Salary" min="1" required>
+        <input type="number" id="taxFeb25" placeholder="Income Tax" min="0" required>
+      </div>
+      <div class="month-row">
+        <label>Mar-25</label>
+        <input type="number" id="grossMar25" placeholder="Gross Salary" min="1" required>
+        <input type="number" id="taxMar25" placeholder="Income Tax" min="0" required>
+      </div>
+      <div class="month-row">
+        <label>Apr-25</label>
+        <input type="number" id="grossApr25" placeholder="Gross Salary" min="1" required>
+        <input type="number" id="taxApr25" placeholder="Income Tax" min="0" required>
+      </div>
+      <div class="month-row">
+        <label>May-25</label>
+        <input type="number" id="grossMay25" placeholder="Gross Salary" min="1" required>
+        <input type="number" id="taxMay25" placeholder="Income Tax (Auto)" readonly>
+      </div>
+      <div class="month-row">
+        <label>Jun-25</label>
+        <input type="number" id="grossJun25" placeholder="Gross Salary" min="1" required>
+        <input type="number" id="taxJun25" value="0" placeholder="Tax (Auto)" readonly>
+      </div>
+    </div>
+    <div class="button-group">
+      <button onclick="generatePDF(true)">Generate PDF Report</button>
+      <button onclick="generatePDF(false)">Preview PDF Report</button>
+    </div>
+  </div>
+  <footer>Developed by Khurram Gill</footer>
+
+  <div class="message-box-overlay" id="messageBoxOverlay">
+    <div class="message-box-content">
+        <p id="messageBoxText"></p>
+        <button onclick="closeMessageBox()">OK</button>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const months = [
+        'Jul-24', 'Aug-24', 'Sep-24', 'Oct-24', 'Nov-24', 'Dec-24',
+        'Jan-25', 'Feb-25', 'Mar-25', 'Apr-25', 'May-25', 'Jun-25'
+      ];
+
+      const bpsIncrements = {
+        1: 430, 2: 490, 3: 580, 4: 660, 5: 750, 6: 840, 7: 910, 8: 1000, 9: 1090, 10: 1190,
+        11: 1310, 12: 1430, 13: 1560, 14: 1740, 15: 1980, 16: 2260, 17: 3420, 18: 4260,
+        19: 4530, 20: 6690, 21: 7420, 22: 8710
+      };
+
+      // Custom message box functions
+      function showMessageBox(message) {
+        document.getElementById('messageBoxText').innerText = message;
+        document.getElementById('messageBoxOverlay').classList.add('visible');
+      }
+
+      window.closeMessageBox = function() { // Make it global for the button's onclick
+        document.getElementById('messageBoxOverlay').classList.remove('visible');
+      }
+
+
+      function calculateIncomeTax(annualTaxableSalary) {
+        annualTaxableSalary = Math.round(annualTaxableSalary);
+        if (annualTaxableSalary <= 600000) return 0;
+        if (annualTaxableSalary <= 1200000) return Math.round((annualTaxableSalary - 600000) * 0.05);
+        if (annualTaxableSalary <= 2200000) return Math.round(30000 + (annualTaxableSalary - 1200000) * 0.15);
+        if (annualTaxableSalary <= 3200000) return Math.round(180000 + (annualTaxableSalary - 2200000) * 0.25);
+        if (annualTaxableSalary <= 4100000) return Math.round(430000 + (annualTaxableSalary - 3200000) * 0.30);
+        return Math.round(700000 + (annualTaxableSalary - 4100000) * 0.35);
+      }
+
+      function generateTaxEquation(annualTaxableSalary) {
+        annualTaxableSalary = Math.round(annualTaxableSalary);
+        // Helper to format numbers with commas
+        const formatNum = (num) => num.toLocaleString('en-IN');
+
+        if (annualTaxableSalary <= 600000) {
+          return `Taxable Salary (${formatNum(annualTaxableSalary)}) ≤ ${formatNum(600000)}, Tax = 0`;
+        }
+        if (annualTaxableSalary <= 1200000) {
+          const excess = annualTaxableSalary - 600000;
+          const tax = Math.round(excess * 0.05);
+          return `(${formatNum(annualTaxableSalary)} - ${formatNum(600000)}) × 5% = ${formatNum(excess)} × 0.05 = Rs. ${formatNum(tax)}`;
+        }
+        if (annualTaxableSalary <= 2200000) {
+          const excess = annualTaxableSalary - 1200000;
+           const tax = Math.round(30000 + excess * 0.15);
+          return `Rs. ${formatNum(30000)} + (${formatNum(annualTaxableSalary)} - ${formatNum(1200000)}) × 15% = Rs. ${formatNum(30000)} + ${formatNum(excess)} × 0.15 = Rs. ${formatNum(tax)}`;
+        }
+        if (annualTaxableSalary <= 3200000) {
+          const excess = annualTaxableSalary - 2200000;
+           const tax = Math.round(180000 + excess * 0.25);
+          return `Rs. ${formatNum(180000)} + (${formatNum(annualTaxableSalary)} - ${formatNum(2200000)}) × 25% = Rs. ${formatNum(180000)} + ${formatNum(excess)} × 0.25 = Rs. ${formatNum(tax)}`;
+        }
+        if (annualTaxableSalary <= 4100000) {
+          const excess = annualTaxableSalary - 3200000;
+          const tax = Math.round(430000 + excess * 0.30);
+          return `Rs. ${formatNum(430000)} + (${formatNum(annualTaxableSalary)} - ${formatNum(3200000)}) × 30% = Rs. ${formatNum(430000)} + ${formatNum(excess)} × 0.30 = Rs. ${formatNum(tax)}`;
+        }
+        const excess = annualTaxableSalary - 4100000;
+        const tax = Math.round(700000 + excess * 0.35);
+        return `Rs. ${formatNum(700000)} + (${formatNum(annualTaxableSalary)} - ${formatNum(4100000)}) × 35% = Rs. ${formatNum(700000)} + ${formatNum(excess)} × 0.35 = Rs. ${formatNum(tax)}`;
+      }
+
+      function updateSalariesAndTaxes() {
+        const bsNo = parseInt(document.getElementById('bsNo')?.value) || 0;
+        // console.log(`BPS No: ${bsNo}`);
+
+        // Part 1: Jul-24 to Nov-24 salary propagation
+        let lastSalaryPart1 = Math.round(parseFloat(document.getElementById('grossJul24')?.value) || 0);
+        if (document.getElementById('grossJul24')?.dataset.edited === 'true') {
+             // If Jul24 was edited, its value is the definite starting point.
+             lastSalaryPart1 = Math.round(parseFloat(document.getElementById('grossJul24').value) || 0);
+        }
+        // console.log(`Initial lastSalaryPart1 (from Jul24): ${lastSalaryPart1}`);
+
+        for (let i = 0; i <= 4; i++) { // Iterate Jul-24 to Nov-24
+          const monthId = months[i].replace('-', '');
+          const input = document.getElementById(`gross${monthId}`);
+          if (input) {
+            if (input.dataset.edited === 'true') { // If this month was user-edited
+              lastSalaryPart1 = Math.round(parseFloat(input.value) || lastSalaryPart1); // Its value becomes the new propagator
+            } else { // If not user-edited
+                if (i > 0 || (i === 0 && !input.value && document.getElementById('grossJul24').value /* only fill Jul if it's empty but has a source */)) {
+                     input.value = lastSalaryPart1 ? lastSalaryPart1 : ''; // Set to propagated salary, allow empty if source is 0/empty
+                } else if (i === 0 && input.value) { // If it's July and has a value (likely initial input)
+                    lastSalaryPart1 = Math.round(parseFloat(input.value) || 0);
+                }
+            }
+            // console.log(`${months[i]} Salary set/kept: ${input.value}, lastSalaryPart1 for next: ${lastSalaryPart1}`);
+          }
+        }
+        
+        // Part 2: Dec-24 salary calculation and propagation to Jun-25
+        const novSalary = Math.round(parseFloat(document.getElementById('grossNov24')?.value) || 0);
+        const decInput = document.getElementById('grossDec24');
+        let decSalary = novSalary; // Default to Nov salary
+
+        if (decInput) {
+            if (decInput.dataset.edited === 'true') { // If Dec was manually edited
+                decSalary = Math.round(parseFloat(decInput.value) || novSalary);
+            } else { // Dec not manually edited, calculate it
+                if (novSalary > 0 && bsNo >= 1 && bsNo <= 22) {
+                    const increment = bpsIncrements[bsNo] || 0;
+                    const incrementBonus = bsNo <= 16 ? Math.round(increment * 0.25) : Math.round(increment * 0.20);
+                    decSalary = Math.round(novSalary + increment + incrementBonus);
+                    decInput.value = decSalary || '';
+                } else {
+                     decInput.value = novSalary ? novSalary : ''; // Follow Nov if no increment
+                     decSalary = novSalary;
+                }
+            }
+        }
+        // console.log(`Dec-24 Salary: ${decSalary}`);
+
+        let lastSalaryPart2 = decSalary;
+        // console.log(`Initial lastSalaryPart2 (from Dec24): ${lastSalaryPart2}`);
+
+        for (let i = 5; i <= 11; i++) { // Iterate Dec-24 to Jun-25
+          const monthId = months[i].replace('-', '');
+          const input = document.getElementById(`gross${monthId}`);
+          if (input) {
+            if (input.id === 'grossDec24') { // Dec is already handled
+                if(input.dataset.edited === 'true'){ // if Dec was edited, update propagator
+                    lastSalaryPart2 = Math.round(parseFloat(input.value) || lastSalaryPart2);
+                } else { // if Dec was auto-calculated, ensure propagator has that value
+                    lastSalaryPart2 = Math.round(parseFloat(input.value) || lastSalaryPart2);
+                }
+                continue; 
+            }
+
+            if (input.dataset.edited === 'true') {
+              lastSalaryPart2 = Math.round(parseFloat(input.value) || lastSalaryPart2);
+            } else {
+              input.value = lastSalaryPart2 ? lastSalaryPart2 : '';
+            }
+            // console.log(`${months[i]} Salary set/kept: ${input.value}, lastSalaryPart2 for next: ${lastSalaryPart2}`);
+          }
+        }
+
+        // Tax logic: Jul-24 to Apr-25 propagation
+        let lastTax = Math.round(parseFloat(document.getElementById('taxJul24')?.value) || 0);
+        if(document.getElementById('taxJul24')?.dataset.edited === 'true'){
+            lastTax = Math.round(parseFloat(document.getElementById('taxJul24').value) || 0);
+        }
+        // console.log(`Initial lastTax (from taxJul24): ${lastTax}`);
+
+        for (let i = 0; i <= 9; i++) { // Iterate Jul-24 to Apr-25 for tax
+          const monthId = months[i].replace('-', '');
+          const input = document.getElementById(`tax${monthId}`);
+          if (input) {
+            if (input.dataset.edited === 'true') {
+              lastTax = Math.round(parseFloat(input.value) || lastTax);
+            } else {
+                if (i > 0 || (i === 0 && !input.value && document.getElementById('taxJul24').value)) {
+                    input.value = lastTax !== undefined ? lastTax : (input.value || '0'); // Default to 0 if no propagation value
+                } else if (i === 0 && input.value) {
+                     lastTax = Math.round(parseFloat(input.value) || 0);
+                } else if (i === 0 && !input.value) { // July tax, empty, no source
+                    input.value = '0'; // Default to 0
+                    lastTax = 0;
+                }
+            }
+            // console.log(`${months[i]} Tax set/kept: ${input.value}, lastTax for next: ${lastTax}`);
+          }
+        }
+
+        // Auto-calculate May-25 tax (taxMay25) and Jun-25 tax (taxJun25 is always 0)
+        const grossSalaries = months.map((mStr) => {
+          const input = document.getElementById(`gross${mStr.replace('-', '')}`);
+          return input && input.value ? Math.round(parseFloat(input.value) || 0) : 0;
+        });
+        const incomeTaxesTillApr = months.slice(0, 10).map((mStr) => { // Jul-24 to Apr-25
+          const input = document.getElementById(`tax${mStr.replace('-', '')}`);
+          return input && input.value ? Math.round(parseFloat(input.value) || 0) : 0;
+        });
+
+        const medicalAllowanceMonthly = Math.round(parseFloat(document.getElementById('medicalAllowance')?.value) || 0);
+        const mayTaxInput = document.getElementById('taxMay25');
+        const junTaxInput = document.getElementById('taxJun25'); // Jun-25 tax is always 0
+
+        if (junTaxInput) junTaxInput.value = 0; // Set Jun-25 tax to 0
+
+        // Check if all gross salaries are filled and medical allowance is positive
+        if (grossSalaries.every(s => s > 0) && medicalAllowanceMonthly > 0 && mayTaxInput) {
+          const totalGrossSalary = Math.round(grossSalaries.reduce((sum, val) => sum + val, 0));
+          const totalMedicalAllowanceAnnual = Math.round(medicalAllowanceMonthly * 12);
+          const annualTaxableSalary = Math.round(totalGrossSalary - totalMedicalAllowanceAnnual);
+          
+          const totalAnnualTaxDue = calculateIncomeTax(annualTaxableSalary);
+          const taxDeductedTillApr = Math.round(incomeTaxesTillApr.reduce((sum, val) => sum + val, 0));
+          
+          const taxInMay = Math.round(totalAnnualTaxDue - taxDeductedTillApr);
+          mayTaxInput.value = taxInMay >= 0 ? taxInMay : 0; // Tax cannot be negative
+        //   console.log(`May-25 Tax: ${mayTaxInput.value}, Total Gross: ${totalGrossSalary}, Annual Taxable: ${annualTaxableSalary}, Total Annual Tax Due: ${totalAnnualTaxDue}, Tax Till Apr: ${taxDeductedTillApr}`);
+        } else {
+          if (mayTaxInput) mayTaxInput.value = ''; // Clear if inputs are not sufficient
+        //   console.log('May-25 Tax not calculated: Insufficient inputs', { numGrossSalaries: grossSalaries.filter(s=>s>0).length, medicalAllowanceMonthly });
+        }
+      }
+
+      // Event listeners for all relevant inputs
+      document.querySelectorAll('.form-grid input, #monthInputs input:not([readonly])').forEach(input => {
+        input.addEventListener('input', (event) => {
+          const currentInput = event.target;
+          if (currentInput.type === 'number' && currentInput.value !== '') {
+            // Round to whole number, but allow empty string
+             const value = parseFloat(currentInput.value);
+             if (!isNaN(value)) {
+                currentInput.value = Math.round(value);
+             } else if (currentInput.value !== '') { // if not a number but not empty (e.g. "abc")
+                currentInput.value = ''; // clear invalid non-numeric input
+             }
+          }
+          if (currentInput.id.startsWith('gross') || currentInput.id.startsWith('tax')) {
+            currentInput.dataset.edited = 'true';
+            // console.log(`${currentInput.id} marked as edited.`);
+          }
+          updateSalariesAndTaxes();
+        });
+      });
+      
+      // Initial population and calculation
+      updateSalariesAndTaxes();
+
+
+      window.generatePDF = function(save = true) {
+        if (!window.jspdf || !window.jspdf.jsPDF) {
+          showMessageBox('Error: jsPDF library not loaded. Please check your internet connection or contact support.');
+          return;
+        }
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+
+        if (!doc.autoTable) {
+          showMessageBox('Error: jsPDF-AutoTable plugin not loaded. Please check your internet connection or contact support.');
+          return;
+        }
+
+        try {
+          // Collect form data
+          const employeeName = document.getElementById('employeeName')?.value.trim() || 'N/A';
+          const cnic = document.getElementById('cnic')?.value.trim() || 'N/A';
+          const designation = document.getElementById('designation')?.value.trim() || 'N/A';
+          const bsNoStr = document.getElementById('bsNo')?.value;
+          const bsNo = bsNoStr ? parseInt(bsNoStr) : 0;
+          const branchName = document.getElementById('branchName')?.value.trim() || 'N/A';
+          const medicalAllowanceMonthlyStr = document.getElementById('medicalAllowance')?.value;
+          const medicalAllowanceMonthly = medicalAllowanceMonthlyStr ? Math.round(parseFloat(medicalAllowanceMonthlyStr)) : 0;
+
+          const grossSalaries = [];
+          const incomeTaxes = []; // Will hold all 12 months' taxes for the table
+
+          let allInputsValid = true;
+          if (!employeeName || employeeName === 'N/A') allInputsValid = false;
+          if (!cnic || cnic === 'N/A') allInputsValid = false;
+          if (!designation || designation === 'N/A') allInputsValid = false;
+          if (bsNo < 1 || bsNo > 22) allInputsValid = false;
+          if (!branchName || branchName === 'N/A') allInputsValid = false;
+          if (medicalAllowanceMonthly <= 0) allInputsValid = false;
+
+
+          months.forEach((monthStr, index) => {
+            const monthIdSuffix = monthStr.replace('-', '');
+            const grossInput = document.getElementById(`gross${monthIdSuffix}`);
+            const taxInput = document.getElementById(`tax${monthIdSuffix}`);
+
+            const grossVal = grossInput && grossInput.value ? Math.round(parseFloat(grossInput.value)) : 0;
+            const taxVal = taxInput && taxInput.value ? Math.round(parseFloat(taxInput.value)) : 0;
+            
+            grossSalaries.push(grossVal);
+            incomeTaxes.push(taxVal);
+
+            if (grossVal <= 0) allInputsValid = false;
+            if (taxVal < 0) allInputsValid = false; // Tax can be 0 but not negative
+          });
+          
+          if (!allInputsValid) {
+             showMessageBox('Please fill all required fields with valid values. Ensure BPS No. is 1-22, salaries are positive, medical allowance is positive, and taxes are non-negative.');
+             console.log('Validation failed. Data:', { employeeName, cnic, designation, bsNo, branchName, medicalAllowanceMonthly, grossSalaries, incomeTaxes });
+             return;
+          }
+          
+          // Header
+          doc.setFontSize(16);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(0, 0, 0); // Pure black
+          doc.text(`Income Tax Statement 2024-25`, 105, 18, { align: 'center' });
+          doc.setFontSize(12);
+          doc.text(`${branchName}, District Council Faisalabad`, 105, 26, { align: 'center' });
+          doc.setLineWidth(0.5);
+          doc.setDrawColor(0, 0, 0); // Pure black for line
+          doc.line(20, 30, 190, 30); // Adjusted line margins
+
+          // Employee Details
+          doc.setFontSize(11);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(0, 0, 0); // Pure black
+          let yPos = 40;
+          doc.text('Name:', 20, yPos); doc.setFont('helvetica', 'normal'); doc.text(employeeName, 50, yPos);
+          doc.setFont('helvetica', 'bold'); doc.text('CNIC:', 110, yPos); doc.setFont('helvetica', 'normal'); doc.text(cnic, 140, yPos);
+          yPos += 9;
+          doc.setFont('helvetica', 'bold'); doc.text('Designation:', 20, yPos); doc.setFont('helvetica', 'normal'); doc.text(designation, 50, yPos);
+          doc.setFont('helvetica', 'bold'); doc.text('BPS No.:', 110, yPos); doc.setFont('helvetica', 'normal'); doc.text(bsNo.toString(), 140, yPos);
+          yPos += 9;
+
+          // Salary/Income Tax Table
+          const tableData = months.map((month, index) => {
+            const grossSalary = grossSalaries[index];
+            const taxableSalaryMonth = Math.round(grossSalary - medicalAllowanceMonthly);
+            const incomeTaxMonth = incomeTaxes[index];
+            return [month, grossSalary.toLocaleString(), medicalAllowanceMonthly.toLocaleString(), taxableSalaryMonth.toLocaleString(), incomeTaxMonth.toLocaleString()];
+          });
+
+          const totalGrossSalary = Math.round(grossSalaries.reduce((sum, val) => sum + val, 0));
+          const totalMedicalAllowanceAnnual = Math.round(medicalAllowanceMonthly * 12);
+          const annualTaxableSalary = Math.round(totalGrossSalary - totalMedicalAllowanceAnnual);
+          const totalTaxPaid = Math.round(incomeTaxes.reduce((sum, val) => sum + val, 0));
+          
+          tableData.push([
+            { content: 'Total', styles: { fontStyle: 'bold'} },
+            { content: totalGrossSalary.toLocaleString(), styles: { fontStyle: 'bold'} },
+            { content: totalMedicalAllowanceAnnual.toLocaleString(), styles: { fontStyle: 'bold'} },
+            { content: annualTaxableSalary.toLocaleString(), styles: { fontStyle: 'bold'} },
+            { content: totalTaxPaid.toLocaleString(), styles: { fontStyle: 'bold'} }
+          ]);
+
+          doc.autoTable({
+            startY: yPos + 5,
+            head: [['Month', 'Gross Salary (Rs.)', 'Medical All. (Rs.)', 'Taxable Salary (Rs.)', 'Income Tax Paid (Rs.)']],
+            body: tableData,
+            theme: 'plain', // Changed to plain to control borders manually
+            margin: { left: 20, right: 20 },
+            styles: { fontSize: 11, cellPadding: 1.5, textColor: [0, 0, 0] }, // Increased font size for table data
+            headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: 'bold', fontSize: 11, halign: 'center', lineWidth: { bottom: 0.1, top: 0.1, left: 0.1, right: 0.1}, lineColor: [0,0,0] }, // Light black header, bold text, increased font size
+            columnStyles: {
+              0: { cellWidth: 25, halign: 'left' }, // Month
+              1: { cellWidth: 'auto', halign: 'right' }, // Gross Salary
+              2: { cellWidth: 'auto', halign: 'right' }, // Medical Allowance
+              3: { cellWidth: 'auto', halign: 'right' }, // Taxable Salary
+              4: { cellWidth: 'auto', halign: 'right' }  // Income Tax
+            },
+            // No alternateRowStyles as we are drawing borders manually
+            didDrawCell: (data) => {
+                if (data.cell.section === 'body') {
+                    // Draw bottom border for all body rows
+                    doc.setDrawColor(0, 0, 0); // Pure black
+                    doc.setLineWidth(0.1); // Thin line
+                    doc.line(data.cell.x, data.cell.y + data.cell.height, data.cell.x + data.cell.width, data.cell.y + data.cell.height);
+                }
+                if (data.row.index === tableData.length - 1 && data.cell.section === 'body') { // Last row of the body (Total row)
+                    // Draw bold top border for the total row
+                    doc.setDrawColor(0, 0, 0); // Pure black
+                    doc.setLineWidth(0.4); // Bold line
+                    doc.line(data.cell.x, data.cell.y, data.cell.x + data.cell.width, data.cell.y);
+                }
+            }
+          });
+
+          // Summary Table
+          const totalAnnualTaxDueCalculated = calculateIncomeTax(annualTaxableSalary);
+          const taxEquation = generateTaxEquation(annualTaxableSalary);
+          const difference = totalTaxPaid - totalAnnualTaxDueCalculated;
+          const overLessText = difference === 0 ? 'Nil' : difference > 0 ? `Overpaid by Rs. ${difference.toLocaleString()}` : `Underpaid by Rs. ${(-difference).toLocaleString()}`;
+
+          // Calculate tax deducted from Jul to Apr
+          const taxDeductedJulToApr = incomeTaxes.slice(0, 10).reduce((sum, val) => sum + val, 0);
+          // Get tax deducted in May
+          const taxDeductedMay = incomeTaxes[10];
+
+          const summaryData = [
+            [`Total Annual Taxable Salary:`, `Rs. ${annualTaxableSalary.toLocaleString()}`],
+            [`Total Income Tax Payable (Calculated as per tax slabs):`, `Rs. ${totalAnnualTaxDueCalculated.toLocaleString()}`],
+            [{ content: `Calculation: ${taxEquation}`, colSpan: 2, styles: { fontSize: 11, fontStyle: 'italic', textColor: [0,0,0] } }], // Increased font size for tax equation
+            [`Total Income Tax Deducted (Jul-24 to Apr-25):`, `Rs. ${taxDeductedJulToApr.toLocaleString()}`],
+            [`Income Tax Deducted in May-25:`, `Rs. ${taxDeductedMay.toLocaleString()}`], // New line for May tax
+            [`Total Income Tax Deducted & Paid:`, `Rs. ${totalTaxPaid.toLocaleString()}`],
+            [`Difference (Paid vs. Payable):`, overLessText]
+          ];
+
+          doc.autoTable({
+            startY: doc.lastAutoTable.finalY + 8,
+            body: summaryData,
+            theme: 'plain',
+            margin: { left: 20, right: 20 },
+            styles: { fontSize: 11, cellPadding: 2, textColor: [0,0,0] }, // Overall summary font size set to 11
+            columnStyles: {
+                0: { fontStyle: 'bold', cellWidth: 140 }, // Increased width to prevent wrapping
+                1: { halign: 'right', cellWidth: 'auto' }
+            },
+            didParseCell: (data) => {
+                // Highlight May tax only with background
+                if (data.row.index === 4) { // Index for "May-25" tax line
+                    data.cell.styles.fontStyle = 'bold';
+                    data.cell.styles.fillColor = [240, 240, 240]; // Very light gray background
+                }
+                // Increase font size for "Total Income Tax Deducted & Paid"
+                if (data.row.index === 5) { // Index for "Total Income Tax Deducted & Paid"
+                    data.cell.styles.fontSize = 13; // Larger font size (13, between 11 and 14)
+                    data.cell.styles.fontStyle = 'bold';
+                }
+                // Highlight the last row (Difference) - keeping colors for data insight clarity
+                if (data.row.index === summaryData.length -1) { // Last row (Difference)
+                    data.cell.styles.fontStyle = 'bold';
+                    // Using pure black for text color as per B&W printer request
+                    if (difference > 0) data.cell.styles.textColor = [0, 0, 0]; // Black for overpaid
+                    if (difference < 0) data.cell.styles.textColor = [0, 0, 0]; // Black for underpaid
+                }
+            }
+          });
+          
+          // Signatures removed as per user request
+
+
+          const safeFileName = (employeeName !== 'N/A' ? employeeName.replace(/\s+/g, '_') : 'Employee') + '_Income_Tax_Statement_2024-25.pdf';
+          if (save) {
+            try {
+              doc.save(safeFileName);
+            } catch (e) {
+              console.error('Download Error:', e);
+              showMessageBox('Download failed. This might be due to browser restrictions. Please try the Preview button or ensure your browser allows downloads from this page.');
+            }
+          } else {
+            const blob = doc.output('blob');
+            const url = URL.createObjectURL(blob);
+            const previewWindow = window.open(url, '_blank');
+            if (!previewWindow) {
+                showMessageBox('Preview failed. Please ensure your browser allows pop-ups for this site.');
+            }
+          }
+        } catch (error) {
+          console.error('PDF Generation Error:', error);
+          showMessageBox('Error generating PDF: ' + error.message + '. Please check console for details.');
+        }
+      };
+    });
+  </script>
+</body>
+</html>
